@@ -1,6 +1,7 @@
 [package]
-name = "hapi_rust"
+name = "hapi_rs"
 version = "0.1.0"
 authors = ["Paul Reesman <paul.reesman@nordstrom.com>"]
 
 [dependencies]
+serde = "1.0.77"

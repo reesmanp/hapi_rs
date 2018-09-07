@@ -1,7 +1,3 @@
-// Public modules
-pub mod cookies;
-pub mod headers;
-pub mod request;
-pub mod response;
+extern crate serde;
 pub mod server;
-pub mod util;
+pub mod http;

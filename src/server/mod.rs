@@ -1,102 +1,110 @@
-pub mod options;
-mod pool;
+pub mod internals;
 
-use std::net::TcpListener;
-use std::net::TcpStream;
-use std::thread;
+use self::internals::{
+    options::ServerOptions,
+    route::Route,
+    thread_pool::ThreadPool
+};
+use super::http::{HTTP, HTTPStatusCodes};
+use super::http::request::Request;
+use std::vec::Vec;
+use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
-use request::Request;
-use response::Response;
-use self::pool::{ThreadPool, ThreadPoolError};
-use self::options::Options;
+use std::io::*;
 
-struct Route<'a> {
-  method: String,
-  path: String,
-  handler: (&'a Fn(Request, Response) -> Result<String, String>)
+pub struct Server {
+    port: u32,
+    host: String,
+    routes: Vec<Route>,
+    server_thread_pool: ThreadPool,
+    worker_thread_pool: ThreadPool
 }
 
-pub struct Server<'a> {
-  port: u32,
-  host: String,
-  routes: Vec<Route<'a>>,
-  server_pool: ThreadPool,
-  worker_pool: ThreadPool
+impl Server {
+    pub fn new(options: &ServerOptions) -> Self {
+        assert!(options.get_server_threads() > 0);
+        assert!(options.get_worker_threads() > 0);
+
+        Self {
+            port: options.get_port(),
+            host: options.get_host(),
+            routes: vec![],
+            server_thread_pool: ThreadPool::new(options.get_server_threads()),
+            worker_thread_pool: ThreadPool::new(options.get_worker_threads())
+        }
+    }
+
+    pub fn route(&mut self, new_route: Route) {
+        // TODO: Add more route validation here
+        self.routes.push(new_route);
+    }
+
+    pub fn start(&self) -> Result<String> {
+        let host_url = format!("{}:{}", self.host, self.port);
+        let listener = TcpListener::bind(host_url).unwrap();
+        let worker_listener = Arc::new(Mutex::new(listener.try_clone().unwrap()));
+        let shared_routes = Arc::new(self.routes.to_vec());
+
+        // Begin Accepting Connections on all Server Threads
+        self.server_thread_pool.execute_all_continuous(move || {
+            loop {
+                match worker_listener.lock().unwrap().accept() {
+                    Err(_) => continue,
+                    Ok((stream, _addr)) => handle_connection(stream, &shared_routes)
+                }
+            }
+        });
+
+        loop {}
+
+        Ok(String::from("OK"))
+    }
+
+    //fn handle_connection(&self, stream: TcpStream) {}
 }
 
-impl<'a> Server<'a> {
-  pub fn new(options: Options) -> Server<'a> {
-    let mut server_threads: usize = options.server_threads;
-    let mut worker_threads: usize = options.worker_threads;
-
-    if server_threads == 0 {
-      server_threads = 1;
+impl Default for Server {
+    fn default() -> Self {
+        Self {
+            port: 3000,
+            host: String::from("localhost"),
+            routes: vec![],
+            server_thread_pool: ThreadPool::new(1),
+            worker_thread_pool: ThreadPool::new(2)
+        }
     }
-    if worker_threads == 0 {
-      worker_threads = 8;
-    }
+}
 
-    let server_pool = ThreadPool::new(server_threads).unwrap();
-    let worker_pool = ThreadPool::new(worker_threads).unwrap();
+fn handle_connection(mut stream: TcpStream, routes: &Arc<Vec<Route>>) {
+    let mut buffer:[u8; 512] = [0; 512];
+    stream.read(&mut buffer).unwrap();
+    let (_, buffer_split) = buffer.split_at(0);
 
-    Server {
-      port: 3000,
-      host: "localhost".to_string(),
-      routes: Vec::new(),
-      server_pool,
-      worker_pool
-    }
-  }
-
-  pub fn route(&mut self, method: String, path: String, handler: (&'a Fn(Request, Response) -> Result<String, String>)) {
-    let new_route = Route {
-      method,
-      path,
-      handler
+    let request = match buffer_split.len() {
+        0 => {
+            stream.write(HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c400).as_ref()).unwrap();
+            stream.flush().unwrap();
+            None
+        },
+        _ => {
+            Request::parse_request(buffer_split)
+        }
     };
 
-    self.routes.push(new_route);
-  }
-
-  pub fn start(&self) -> Result<String, String> {
-    let local_addr = format!("{}:{}", self.host, self.port);
-
-    let server_listener = TcpListener::bind(local_addr).unwrap();
-    let server_worker_listener = Arc::new(Mutex::new(server_listener.try_clone().unwrap()));
-
-    self.server_pool.execute(move || {
-      loop {
-        match server_worker_listener.lock().unwrap().accept() {
-          Err(_) => continue,
-          Ok((_socket, addr)) => {
-            //server_worker_listener.unlock();
-            println!("new client: {:?}", addr);
-          }
-        }
-      }
-    });
-
-    loop {}
-/*
-    thread::spawn(move || -> Result<String, String> {
-      match TcpListener::bind(addr) {
-        Ok(listener) => {
-          for connection_attempt in listener.incoming() {
-            let _conn = match connection_attempt {
-              Ok(connection) => self.handle_connection(connection),
-              Err(_) => continue
-            };
-          };
-          Ok("All done!".to_string())
+    let response = match request {
+        None => {
+            HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c400)
         },
-        Err(error) => Err(error.to_string())
-      }
-    });
-*/
-    Ok("Everything is fine...".to_string())
-  }
+        Some(some_request) => {
+            println!("{:?}", some_request.get_method());
+            println!("{:?}", some_request.get_path());
+            println!("{:?}", some_request.get_version());
+            println!("{}", some_request.get_headers().get_headers_formatted());
+            HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c200)
+        }
+    };
 
-  fn handle_connection(&self, mut connection: TcpStream) {
-    println!("Server is now handling the connection");
-  }
+    stream.write(response.as_ref()).unwrap();
+    stream.flush().unwrap();
+    println!("Response: {}", response);
 }
