@@ -1,7 +1,7 @@
 use super::{HTTPMethod, HTTPVersion};
 use super::header::Header;
 use std::vec::Vec;
-use serde
+//use serde
 
 pub struct Request {
     method: HTTPMethod,
