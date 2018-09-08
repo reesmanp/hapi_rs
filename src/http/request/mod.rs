@@ -7,16 +7,18 @@ pub struct Request {
     method: HTTPMethod,
     path: String,
     version: HTTPVersion,
-    headers: Header
+    headers: Header,
+    payload: String
 }
 
 impl Request {
-    pub fn new(method: HTTPMethod, path: String, version: HTTPVersion, headers: Header) -> Self {
+    pub fn new(method: HTTPMethod, path: String, version: HTTPVersion, headers: Header, payload: String) -> Self {
         Self {
             method,
             path,
             version,
-            headers
+            headers,
+            payload
         }
     }
 
@@ -40,17 +42,28 @@ impl Request {
         self.headers.clone()
     }
 
+    pub fn get_payload(&self) -> String {
+        self.payload.clone()
+    }
+
     /**
      * Request Parsing
     */
 
     pub fn parse_request(mut buffer: &[u8]) -> Option<Self> {
-        let mut str_buffer = String::from_utf8(buffer.to_vec()).unwrap();
+        // Safe check for stringifying request
+        let mut str_buffer = match String::from_utf8(buffer.to_vec()) {
+            Err(_) => return None,
+            Ok(T) => T
+        };
+
         let mut split_buffer = str_buffer.split("\r\n");
         let mut header_vec: Vec<&str> = vec![];
+        let mut payload_vec: Vec<&str> = vec![];
 
         let request_line_opt = Self::parse_request_line(split_buffer.next().unwrap());
 
+        // Combine headers
         loop {
             match split_buffer.next() {
                 None => return None,
@@ -63,14 +76,6 @@ impl Request {
 
         let headers_opt = Self::parse_headers(header_vec.join("\n").as_ref());
 
-        loop {
-            let next = split_buffer.next();
-            match next {
-                None => break,
-                Some(message) => continue //println!("{:?}", message)
-            }
-        }
-
         if request_line_opt == None || headers_opt == None {
             return None;
         }
@@ -78,12 +83,22 @@ impl Request {
         let (method, path, version) = request_line_opt.unwrap();
         let headers = headers_opt.unwrap();
 
+        // Grab Payload
+        loop {
+            match split_buffer.next() {
+                None => break,
+                Some(T) => payload_vec.push(T)
+            }
+        }
+        let payload = payload_vec.join("\r\n");
+
         Some(
             Self {
                 method,
                 path,
                 version,
-                headers
+                headers,
+                payload
             }
         )
     }
@@ -91,10 +106,28 @@ impl Request {
     fn parse_request_line(mut buffer: &str) -> Option<(HTTPMethod, String, HTTPVersion)> {
         let mut split_buffer = buffer.split(" ");
 
-        let method = HTTPMethod::from_str(split_buffer.next().unwrap());
-        let path = String::from(split_buffer.next().unwrap());
-        let version = HTTPVersion::from_str(split_buffer.next().unwrap());
+        // Safe check for HTTP method
+        let mut next_iter = match split_buffer.next() {
+            None => "",
+            Some(T) => T
+        };
+        let method = HTTPMethod::from_str(next_iter);
 
+        // Safe check for request-uri
+        next_iter = match split_buffer.next() {
+            None => "/",
+            Some(T) => T
+        };
+        let path = String::from(next_iter);
+
+        // Safe check for HTTP version
+        next_iter = match split_buffer.next() {
+            None => "",
+            Some(T) => T
+        };
+        let version = HTTPVersion::from_str(next_iter);
+
+        // Check if method or version is supported
         if method == HTTPMethod::ERR || version == HTTPVersion::ERR {
             return None;
         }
@@ -120,6 +153,7 @@ impl Request {
                     (temp_key, temp_value)
                 }
             };
+
             header.insert(String::from(key), String::from(value));
         }
 
@@ -133,7 +167,8 @@ impl Default for Request {
             method: HTTPMethod::GET,
             path: String::from(""),
             version: HTTPVersion::HTTP11,
-            headers: Header::new()
+            headers: Header::new(),
+            payload: String::from("")
         }
     }
 }

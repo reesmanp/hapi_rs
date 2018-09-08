@@ -100,6 +100,7 @@ fn handle_connection(mut stream: TcpStream, routes: &Arc<Vec<Route>>) {
             println!("{:?}", some_request.get_path());
             println!("{:?}", some_request.get_version());
             println!("{}", some_request.get_headers().get_headers_formatted());
+            println!("{}", some_request.get_payload());
             HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c200)
         }
     };
