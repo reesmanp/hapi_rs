@@ -159,6 +159,8 @@ impl Request {
 
         Some(header)
     }
+
+    //fn parse_payload(mut buffer: &str) -> Option
 }
 
 impl Default for Request {

@@ -5,7 +5,7 @@ use self::internals::{
     route::Route,
     thread_pool::ThreadPool
 };
-use super::http::{HTTP, HTTPStatusCodes};
+use super::http::{HTTP, HTTPStatusCodes, HTTPMethod};
 use super::http::request::Request;
 use std::vec::Vec;
 use std::net::{TcpListener, TcpStream};
@@ -109,3 +109,5 @@ fn handle_connection(mut stream: TcpStream, routes: &Arc<Vec<Route>>) {
     stream.flush().unwrap();
     println!("Response: {}", response);
 }
+
+fn router(routes: &Arc<Vec<Route>>, method: HTTPMethod, path: String) {}
