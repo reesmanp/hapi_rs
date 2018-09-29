@@ -5,6 +5,9 @@ pub mod response;
 pub struct HTTP;
 
 impl HTTP {
+    pub fn get_generic_response_string(code: HTTPStatusCodes, version: HTTPVersion) -> String {
+        format!("{:?} {:?} {:?}\r\n\r\n", version, HTTPStatusCodes::to_int(&code), HTTPStatusCodes::get_generic_reason(&code))
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -97,6 +100,15 @@ impl HTTPVersion {
             _ => HTTPVersion::ERR
         }
     }
+
+    pub fn to_string(version: Self) -> String {
+        match version {
+            HTTPVersion::HTTP10 => String::from("HTTP/1.0"),
+            HTTPVersion::HTTP11 => String::from("HTTP/1.1"),
+            HTTPVersion::HTTP20 => String::from("HTTP/2.0"),
+            HTTPVersion::ERR => String::from("")
+        }
+    }
 }
 
 pub enum HTTPStatusCodes {
@@ -107,12 +119,21 @@ pub enum HTTPStatusCodes {
 }
 
 impl HTTPStatusCodes {
-    pub fn get_generic_response(code: Self) -> String {
+    pub fn get_generic_reason(code: &Self) -> String {
         match code {
-            HTTPStatusCodes::c200 => String::from("HTTP/2.0 200 OK\r\n\r\n"),
-            HTTPStatusCodes::c400 => String::from("HTTP/2.0 400 BAD REQUEST\r\n\r\n"),
-            HTTPStatusCodes::c404 => String::from("HTTP/2.0 404 NOT FOUND\r\n\r\n"),
-            HTTPStatusCodes::c500 => String::from("HTTP/2.0 500 INTERNAL SERVER ERROR\r\n\r\n")
+            HTTPStatusCodes::c200 => String::from("OK"),
+            HTTPStatusCodes::c400 => String::from("BAD REQUEST"),
+            HTTPStatusCodes::c404 => String::from("NOT FOUND"),
+            HTTPStatusCodes::c500 => String::from("INTERNAL SERVER ERROR")
+        }
+    }
+
+    pub fn to_int(code: &Self) -> u32 {
+        match code {
+            HTTPStatusCodes::c200 => 200,
+            HTTPStatusCodes::c400 => 400,
+            HTTPStatusCodes::c404 => 404,
+            HTTPStatusCodes::c500 => 500
         }
     }
 }

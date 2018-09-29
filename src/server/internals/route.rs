@@ -78,9 +78,10 @@ impl Default for Route {
         Self {
             method: HTTPMethod::GET,
             path: String::from("/"),
-            handler: Arc::new(Box::new(|req: &Request, res: &mut Response|
-                HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c200)
-            ))
+            handler: Arc::new(Box::new(|req: &Request, res: &mut Response| {
+                res.flush();
+                String::from("Ok")
+            }))
         }
     }
 }
