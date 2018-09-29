@@ -1,7 +1,6 @@
 use std::thread;
 use std::sync::{Arc, Mutex, mpsc};
 use super::message::Message;
-use super::job::Job;
 
 pub struct Worker {
     id: u8,
@@ -14,7 +13,7 @@ impl Worker {
             id,
             thread: Some(thread::spawn(move || {
                 loop {
-                    let mut unlocked = match receiver.lock() {
+                    let unlocked = match receiver.lock() {
                         Ok(T) => T,
                         Err(_) => break
                     };
@@ -37,6 +36,10 @@ impl Worker {
                             println!("Worker {} got a new job!", id);
                             job.call_box();
                         },
+                        Message::HandlerJob(job, req, mut res) => {
+                            println!("Worker {} got a new handler job!", id);
+                            job(&req, &mut res);
+                        }
                         Message::Terminate => {
                             println!("Worker {} was told to terminate", id);
                             break;
@@ -60,3 +63,15 @@ impl Drop for Worker {
         }
     }
 }
+
+/*impl Clone for Worker {
+    fn clone(&self) -> Self {
+        Self {
+            id: self.id,
+            thread: match self.thread {
+                None => None,
+                Some(ref T) => Some(*T)
+            }
+        }
+    }
+}*/

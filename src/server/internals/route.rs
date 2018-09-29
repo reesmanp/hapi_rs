@@ -1,8 +1,13 @@
 use std::sync::Arc;
-use super::super::super::http::HTTPMethod;
+use super::thread_pool::job::FnBox;
+use super::super::super::http::{
+    HTTPMethod,
+    request::Request,
+    response::Response,
+    HTTPStatusCodes
+};
 
-//type RouteHandler = FnMut (String) -> String;
-type RouteHandler = Box<Send + Sync + 'static>;
+pub type RouteHandler = Box<Fn(&Request, &mut Response) -> String + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub struct Route {
@@ -20,7 +25,19 @@ impl Route {
         }
     }
 
-    pub fn is_route_match(self, method: HTTPMethod, path: String) -> bool {
+    pub fn get_method(&self) -> HTTPMethod {
+        self.method
+    }
+
+    pub fn get_path(&self) -> String {
+        self.path.clone()
+    }
+
+    pub fn get_handler(&self) -> Arc<RouteHandler> {
+        self.handler.clone()
+    }
+
+    pub fn is_route_match(&self, method: HTTPMethod, path: String) -> bool {
         if self.method == method && self.is_path_match(path) {
             true
         } else {
@@ -28,7 +45,7 @@ impl Route {
         }
     }
 
-    fn is_path_match(self, path: String) -> bool {
+    fn is_path_match(&self, path: String) -> bool {
         let mut is_grabbing = false;
         let mut path_so_far = String::from("");
 
@@ -61,7 +78,9 @@ impl Default for Route {
         Self {
             method: HTTPMethod::GET,
             path: String::from("/"),
-            handler: Arc::new(Box::new(|x: String| x))
+            handler: Arc::new(Box::new(|req: &Request, res: &mut Response|
+                HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c200)
+            ))
         }
     }
 }

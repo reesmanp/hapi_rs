@@ -3,14 +3,17 @@ pub mod internals;
 use self::internals::{
     options::ServerOptions,
     route::Route,
-    thread_pool::ThreadPool
+    thread_pool::ThreadPool,
+    thread_pool::job::FnBox
 };
-use super::http::{HTTP, HTTPStatusCodes, HTTPMethod};
+use super::http::HTTPStatusCodes;
 use super::http::request::Request;
+use super::http::response::Response;
 use std::vec::Vec;
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::io::*;
+use std::marker::Sync;
 
 pub struct Server {
     port: u32,
@@ -39,28 +42,29 @@ impl Server {
         self.routes.push(new_route);
     }
 
-    pub fn start(&self) -> Result<String> {
+    pub fn start(self) -> Result<String> {
         let host_url = format!("{}:{}", self.host, self.port);
         let listener = TcpListener::bind(host_url).unwrap();
         let worker_listener = Arc::new(Mutex::new(listener.try_clone().unwrap()));
-        let shared_routes = Arc::new(self.routes.to_vec());
+        let mut shared_routes = Arc::new(self.routes.to_vec());
+        let worker_thread_pool = Arc::new(self.worker_thread_pool);
 
         // Begin Accepting Connections on all Server Threads
-        self.server_thread_pool.execute_all_continuous(move || {
+        let server_thread_job = move || {
             loop {
                 match worker_listener.lock().unwrap().accept() {
                     Err(_) => continue,
-                    Ok((stream, _addr)) => handle_connection(stream, &shared_routes)
+                    Ok((stream, _addr)) => handle_connection(stream, &mut shared_routes, Arc::clone(&worker_thread_pool))
                 }
             }
-        });
+        };
+
+        self.server_thread_pool.execute_job(server_thread_job);
 
         loop {}
 
         Ok(String::from("OK"))
     }
-
-    //fn handle_connection(&self, stream: TcpStream) {}
 }
 
 impl Default for Server {
@@ -75,13 +79,15 @@ impl Default for Server {
     }
 }
 
-fn handle_connection(mut stream: TcpStream, routes: &Arc<Vec<Route>>) {
+fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: Arc<ThreadPool>) {
     let mut buffer:[u8; 512] = [0; 512];
     stream.read(&mut buffer).unwrap();
     let (_, buffer_split) = buffer.split_at(0);
 
     let request = match buffer_split.len() {
         0 => {
+            // Request has no content
+            // TODO: Allow user to override generic response with custom route
             stream.write(HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c400).as_ref()).unwrap();
             stream.flush().unwrap();
             None
@@ -91,23 +97,49 @@ fn handle_connection(mut stream: TcpStream, routes: &Arc<Vec<Route>>) {
         }
     };
 
+    // Get the String response to write to the stream
     let response = match request {
         None => {
+            // Request didn't parse correctly
+            // Bad Request
+            // TODO: Allow user to override generic response with custom route
             HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c400)
         },
         Some(some_request) => {
+            let mut route_response = String::from("");
+
             println!("{:?}", some_request.get_method());
             println!("{:?}", some_request.get_path());
             println!("{:?}", some_request.get_version());
             println!("{}", some_request.get_headers().get_headers_formatted());
             println!("{}", some_request.get_payload());
-            HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c200)
+
+            // Valid request
+            // Searching for matching route in order it was added
+            for route in routes.iter() {
+                match route.is_route_match(some_request.get_method(), some_request.get_path()) {
+                    true => {
+                        // Route exists
+                        // Call route handler
+                        let handler_box = *route.get_handler();
+                        //let handler_box = Box::new(**route.get_handler());
+                        pool.execute_handler(handler_box, some_request, Response::default());
+                        //route_response = (**route.get_handler())(&some_request, &mut Response::default());
+                        return;
+                    },
+                    false => continue
+                }
+            }
+
+            // Route was not found
+            // Send 404
+            // TODO: Allow user to override generic response with custom route
+            HTTPStatusCodes::get_generic_response(HTTPStatusCodes::c404)
         }
     };
 
+    // Write and flush the response to the stream
     stream.write(response.as_ref()).unwrap();
     stream.flush().unwrap();
     println!("Response: {}", response);
 }
-
-fn router(routes: &Arc<Vec<Route>>, method: HTTPMethod, path: String) {}

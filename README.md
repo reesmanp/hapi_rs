@@ -1,6 +1,9 @@
 # hapi_rs
 A rust implementation of the hapiJS framework.
 
+### Roadmap
+[Click here to see the progress to 1.0.0!](docs/Roadmap.md)
+
 ### Example
 ```rust
 extern crate hapi_rs;

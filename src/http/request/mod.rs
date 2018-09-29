@@ -50,9 +50,9 @@ impl Request {
      * Request Parsing
     */
 
-    pub fn parse_request(mut buffer: &[u8]) -> Option<Self> {
+    pub fn parse_request(buffer: &[u8]) -> Option<Self> {
         // Safe check for stringifying request
-        let mut str_buffer = match String::from_utf8(buffer.to_vec()) {
+        let str_buffer = match String::from_utf8(buffer.to_vec()) {
             Err(_) => return None,
             Ok(T) => T
         };
@@ -103,7 +103,7 @@ impl Request {
         )
     }
 
-    fn parse_request_line(mut buffer: &str) -> Option<(HTTPMethod, String, HTTPVersion)> {
+    fn parse_request_line(buffer: &str) -> Option<(HTTPMethod, String, HTTPVersion)> {
         let mut split_buffer = buffer.split(" ");
 
         // Safe check for HTTP method
@@ -139,7 +139,7 @@ impl Request {
         ))
     }
 
-    fn parse_headers(mut buffer: &str) -> Option<Header> {
+    fn parse_headers(buffer: &str) -> Option<Header> {
         let mut split_buffer = buffer.split("\n");
         let mut header = Header::new();
 

@@ -1,15 +1,21 @@
-mod job;
+pub mod job;
 mod message;
 mod worker;
 
 use std::vec::Vec;
 use std::sync::{Arc, mpsc, Mutex};
+use self::job::{Job, FnBox};
 use self::worker::Worker;
 use self::message::Message;
+use super::route::RouteHandler;
+use super::super::super::http::{
+    request::Request,
+    response::Response
+};
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: mpsc::Sender<Message>
+    sender: mpsc::SyncSender<Message>
 }
 
 impl ThreadPool {
@@ -17,7 +23,7 @@ impl ThreadPool {
         assert!(size > 0);
         assert!(size as u8 <= u8::max_value());
 
-        let (sender, receiver) = mpsc::channel();
+        let (sender, receiver) = mpsc::sync_channel(2);
         let receiver = Arc::new(Mutex::new(receiver));
         let mut workers = Vec::with_capacity(size);
 
@@ -31,22 +37,16 @@ impl ThreadPool {
         }
     }
 
-    pub fn execute<F>(&self, f: F)
-        where
-            F: FnOnce() + Send + 'static
-    {
-        let job = Box::new(f);
-
-        self.sender.send(Message::NewJob(job));
+    pub fn execute_handler(&self, handler: RouteHandler, req: Request, res: Response) {
+        self.sender.send(Message::HandlerJob(handler, req, res));
     }
 
-    pub fn execute_all_continuous<F>(&self, f: F)
-        where
-            F: FnOnce() + Send + 'static + Clone
+    pub fn execute_job<F>(&self, f: F)
+        where F: FnBox + FnOnce() + Send + Clone + 'static
     {
         let job = Box::new(f);
-
-        for _worker in &self.workers {
+        for _worker in &self.workers
+            {
             let cloned_job = job.clone();
             self.sender.send(Message::NewContinuousJob(cloned_job));
         }

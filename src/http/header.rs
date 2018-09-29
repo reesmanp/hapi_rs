@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::vec::Vec;
 
 #[derive(Eq, PartialEq, Clone)]
 pub struct Header {

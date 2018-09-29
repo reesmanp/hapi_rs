@@ -2,8 +2,6 @@ pub mod header;
 pub mod request;
 pub mod response;
 
-use self::request::Request;
-
 pub struct HTTP;
 
 impl HTTP {
@@ -104,6 +102,7 @@ impl HTTPVersion {
 pub enum HTTPStatusCodes {
     c200,
     c400,
+    c404,
     c500
 }
 
@@ -112,6 +111,7 @@ impl HTTPStatusCodes {
         match code {
             HTTPStatusCodes::c200 => String::from("HTTP/2.0 200 OK\r\n\r\n"),
             HTTPStatusCodes::c400 => String::from("HTTP/2.0 400 BAD REQUEST\r\n\r\n"),
+            HTTPStatusCodes::c404 => String::from("HTTP/2.0 404 NOT FOUND\r\n\r\n"),
             HTTPStatusCodes::c500 => String::from("HTTP/2.0 500 INTERNAL SERVER ERROR\r\n\r\n")
         }
     }
