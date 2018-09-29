@@ -37,7 +37,7 @@ impl ThreadPool {
         }
     }
 
-    pub fn execute_handler(&self, handler: RouteHandler, req: Request, res: Response) {
+    pub fn execute_handler(&self, handler: Arc<RouteHandler>, req: Request, res: Response) {
         self.sender.send(Message::HandlerJob(handler, req, res));
     }
 

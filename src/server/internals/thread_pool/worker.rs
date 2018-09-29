@@ -36,9 +36,9 @@ impl Worker {
                             println!("Worker {} got a new job!", id);
                             job.call_box();
                         },
-                        Message::HandlerJob(job, req, mut res) => {
+                        Message::HandlerJob(handler, req, mut res) => {
                             println!("Worker {} got a new handler job!", id);
-                            job(&req, &mut res);
+                            handler(&req, &mut res);
                         }
                         Message::Terminate => {
                             println!("Worker {} was told to terminate", id);

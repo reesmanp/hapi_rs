@@ -34,7 +34,7 @@ impl Route {
     }
 
     pub fn get_handler(&self) -> Arc<RouteHandler> {
-        self.handler.clone()
+        Arc::clone(&self.handler)
     }
 
     pub fn is_route_match(&self, method: HTTPMethod, path: String) -> bool {
