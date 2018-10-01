@@ -40,7 +40,7 @@ impl Route {
         Arc::clone(&self.handler)
     }
 
-    pub fn is_route_match(&mut self, method: HTTPMethod, path: String) -> bool {
+    pub fn is_route_match(&mut self, method: HTTPMethod, path: String) -> bool { // TODO: Change from bool to Result to allow for a 405 to be sent if path matches but is not a correct method
         match self.is_path_match(path) {
             true => {
                 match self.method.iter().find(|&&verb| verb == method) {

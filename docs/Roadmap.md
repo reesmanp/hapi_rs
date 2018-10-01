@@ -12,7 +12,7 @@
 - Implement `hapiJs` API
 
 ### 0.5.0
-- Implement `HTTPS` probably using openssl
+- Implement `HTTPS` probably using tls-api
 
 ### 0.6.0
 - Write decent tests

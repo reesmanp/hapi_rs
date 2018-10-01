@@ -112,19 +112,63 @@ impl HTTPVersion {
 }
 
 pub enum HTTPStatusCodes {
-    c200,
-    c400,
-    c404,
-    c500
+    c100, c101,
+    c200, c201, c202, c203,
+    c204, c205, c206,
+    c300, c301, c302, c303, c304, c305, c306, c307,
+    c400, c401, c402, c403, c404, c405, c406, c407, c408, c409, c410, c411, c412, c413, c414, c415, c416, c417, c418,
+    c500, c501, c502, c503, c504, c505
 }
 
 impl HTTPStatusCodes {
     pub fn get_generic_reason(code: &Self) -> String {
         match code {
+            HTTPStatusCodes::c100 => String::from("Continue"),
+            HTTPStatusCodes::c101 => String::from("Switching Protocols"),
+
             HTTPStatusCodes::c200 => String::from("OK"),
-            HTTPStatusCodes::c400 => String::from("BAD REQUEST"),
-            HTTPStatusCodes::c404 => String::from("NOT FOUND"),
-            HTTPStatusCodes::c500 => String::from("INTERNAL SERVER ERROR")
+            HTTPStatusCodes::c201 => String::from("Created"),
+            HTTPStatusCodes::c202 => String::from("Accepted"),
+            HTTPStatusCodes::c203 => String::from("Non-Authoritative Information"),
+            HTTPStatusCodes::c204 => String::from("No Content"),
+            HTTPStatusCodes::c205 => String::from("Reset Content"),
+            HTTPStatusCodes::c206 => String::from("Partial Content"),
+
+            HTTPStatusCodes::c300 => String::from("Multiple Choices"),
+            HTTPStatusCodes::c301 => String::from("Moved Permanently"),
+            HTTPStatusCodes::c302 => String::from("Found"),
+            HTTPStatusCodes::c303 => String::from("See Other"),
+            HTTPStatusCodes::c304 => String::from("Not Modified"),
+            HTTPStatusCodes::c305 => String::from("Use Proxy"),
+            HTTPStatusCodes::c306 => String::from("Switch Proxy"),
+            HTTPStatusCodes::c307 => String::from("Temporary Redirect"),
+
+            HTTPStatusCodes::c400 => String::from("Bad Request"),
+            HTTPStatusCodes::c401 => String::from("Unauthorized"),
+            HTTPStatusCodes::c402 => String::from("Payment Required"),
+            HTTPStatusCodes::c403 => String::from("Forbidden"),
+            HTTPStatusCodes::c404 => String::from("Not Found"),
+            HTTPStatusCodes::c405 => String::from("Method Not Allowed"),
+            HTTPStatusCodes::c406 => String::from("Not Acceptable"),
+            HTTPStatusCodes::c407 => String::from("Proxy Authentication Required"),
+            HTTPStatusCodes::c408 => String::from("Request Time-out"),
+            HTTPStatusCodes::c409 => String::from("Conflict"),
+            HTTPStatusCodes::c410 => String::from("Gone"),
+            HTTPStatusCodes::c411 => String::from("Length Required"),
+            HTTPStatusCodes::c412 => String::from("Precondition Failed"),
+            HTTPStatusCodes::c413 => String::from("Request Entity Too Large"),
+            HTTPStatusCodes::c414 => String::from("Request-URI Too Large"),
+            HTTPStatusCodes::c415 => String::from("Unsupported Media Type"),
+            HTTPStatusCodes::c416 => String::from("Request Range Not Satisfiable"),
+            HTTPStatusCodes::c417 => String::from("Expectation Failed"),
+            HTTPStatusCodes::c418 => String::from("I'm a teapot"),
+
+            HTTPStatusCodes::c500 => String::from("Internal Server Error"),
+            HTTPStatusCodes::c501 => String::from("Not Implemented"),
+            HTTPStatusCodes::c502 => String::from("Bad Gateway"),
+            HTTPStatusCodes::c503 => String::from("Service Unavailable"),
+            HTTPStatusCodes::c504 => String::from("Gateway Time-out"),
+            HTTPStatusCodes::c505 => String::from("HTTP Version Not Supported")
         }
     }
 
