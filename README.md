@@ -41,10 +41,10 @@ use hapi_rs::server::Server;
 use hapi_rs::server::internals::options::ServerOptions;
 use hapi_rs::server::internals::route::Route;
 use hapi_rs::http::{
+    HTTPMethod,
     request::Request,
     response::Response
 };
-use hapi_rs::http::HTTPMethod;
 
 use std::time::SystemTime;
 use std::sync::Arc;
