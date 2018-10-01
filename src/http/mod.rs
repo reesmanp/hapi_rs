@@ -10,7 +10,7 @@ impl HTTP {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum HTTPMethod {
     GET,
     POST,

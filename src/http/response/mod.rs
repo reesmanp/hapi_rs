@@ -7,16 +7,18 @@ pub struct Response {
     code: u32,
     reason: String,
     headers: Header,
+    body: String,
     stream: Option<TcpStream>
 }
 
 impl Response {
-    pub fn new(version: HTTPVersion, code: u32, reason: String, headers: Header, stream: TcpStream) -> Self {
+    pub fn new(version: HTTPVersion, code: u32, reason: String, headers: Header, body: String, stream: TcpStream) -> Self {
         Self {
             version,
             code,
             reason,
             headers,
+            body,
             stream: Some(stream)
         }
     }
@@ -27,6 +29,7 @@ impl Response {
             code: HTTPStatusCodes::to_int(&HTTPStatusCodes::c200),
             reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::c200),
             headers: Header::new(),
+            body: String::from(""),
             stream: Some(stream)
         }
     }
@@ -51,13 +54,18 @@ impl Response {
         self.headers.clone()
     }
 
+    pub fn get_body(&self) -> String {
+        self.body.clone()
+    }
+
     fn get_response(&self) -> String {
         format!(
-            "{} {} {}\r\n{}\r\n",
+            "{} {} {}\r\n{}\r\n{}",
             HTTPVersion::to_string(self.version),
             self.code,
             self.reason,
-            self.headers.get_headers_formatted() // TODO: Need body
+            self.headers.get_headers_formatted(),
+            self.body
         )
     }
 
@@ -79,6 +87,10 @@ impl Response {
 
     pub fn set_header(&mut self, key: String, value: String) {
         self.headers.insert(key, value);
+    }
+
+    pub fn set_body(&mut self, body: String) {
+        self.body = body;
     }
 
     /**
@@ -106,6 +118,7 @@ impl Default for Response {
             code: HTTPStatusCodes::to_int(&HTTPStatusCodes::c200),
             reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::c200),
             headers: Header::new(),
+            body: String::from(""),
             stream: None
         }
     }

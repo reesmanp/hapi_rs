@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::vec::Vec;
 use super::thread_pool::job::FnBox;
 use super::super::super::http::{
     HTTPMethod,
@@ -11,13 +12,15 @@ pub type RouteHandler = Box<Fn(&Request, &mut Response) -> String + Send + Sync 
 
 #[derive(Clone)]
 pub struct Route {
-    method: HTTPMethod,
+    method: Vec<HTTPMethod>,
     path: String,
     handler: Arc<RouteHandler>
 }
 
 impl Route {
-    pub fn new(method: HTTPMethod, path: String, handler: Arc<RouteHandler>) -> Self {
+    pub fn new(mut method: Vec<HTTPMethod>, path: String, handler: Arc<RouteHandler>) -> Self {
+        method.sort();
+        method.dedup();
         Self {
             method,
             path,
@@ -25,8 +28,8 @@ impl Route {
         }
     }
 
-    pub fn get_method(&self) -> HTTPMethod {
-        self.method
+    pub fn get_method(&self) -> Vec<HTTPMethod> {
+        self.method.to_vec()
     }
 
     pub fn get_path(&self) -> String {
@@ -37,11 +40,15 @@ impl Route {
         Arc::clone(&self.handler)
     }
 
-    pub fn is_route_match(&self, method: HTTPMethod, path: String) -> bool {
-        if self.method == method && self.is_path_match(path) {
-            true
-        } else {
-            false
+    pub fn is_route_match(&mut self, method: HTTPMethod, path: String) -> bool {
+        match self.is_path_match(path) {
+            true => {
+                match self.method.iter().find(|&&verb| verb == method) {
+                    None => false,
+                    Some(T) => true
+                }
+            },
+            false => false
         }
     }
 
@@ -76,9 +83,10 @@ impl Route {
 impl Default for Route {
     fn default() -> Self {
         Self {
-            method: HTTPMethod::GET,
+            method: vec![HTTPMethod::GET, HTTPMethod::POST],
             path: String::from("/"),
             handler: Arc::new(Box::new(|req: &Request, res: &mut Response| {
+                res.set_body(req.get_payload());
                 res.flush();
                 String::from("Ok")
             }))

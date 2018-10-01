@@ -119,15 +119,13 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
 
             // Valid request
             // Searching for matching route in order it was added
-            for route in routes.iter() {
+            for route in routes.to_vec().iter_mut() {
                 match route.is_route_match(some_request.get_method(), some_request.get_path()) {
                     true => {
                         // Route exists
                         // Call route handler
                         let handler_box = route.get_handler();
-                        //let handler_box = Box::new(**route.get_handler());
                         pool.execute_handler(handler_box, some_request, Response::from_stream(stream));
-                        //route_response = (**route.get_handler())(&some_request, &mut Response::default());
                         return;
                     },
                     false => continue
