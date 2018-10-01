@@ -33,13 +33,10 @@ fn main() {
 }
 ```
 
-## Custom Route
+### Custom Route
 ```rust
-extern crate hapi_rs;
+...
 
-use hapi_rs::server::Server;
-use hapi_rs::server::internals::options::ServerOptions;
-use hapi_rs::server::internals::route::Route;
 use hapi_rs::http::{
     HTTPMethod,
     request::Request,
@@ -79,6 +76,40 @@ fn my_func(req: &Request, res: &mut Response) -> String {
         Err(_) => {
             res.set_code(500);
             let reason_str = format!("Time before UNIX EPOCH!");
+            res.set_reason(reason_str);
+            res.flush();
+        }
+    }
+    String::from("OK")
+}
+```
+
+### Custom Route with generic response
+```rust
+...
+
+use hapi_rs::http::{
+    HTTPStatusCodes,
+    request::Request,
+    response::Response
+};
+
+use std::time::SystemTime;
+use std::sync::Arc;
+
+...
+
+fn my_func(req: &Request, res: &mut Response) -> String {
+    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(n) => {
+            let secs = n.as_secs();
+            let time_str = format!("Time is: {}", secs);
+            res.set_body(time_str);
+            res.flush();
+        },
+        Err(_) => {
+            res.set_code(HTTPStatusCodes::c500);
+            let reason_str = HTTPStatusCodes::get_generic_reason(HTTPStatusCodes::c500);
             res.set_reason(reason_str);
             res.flush();
         }

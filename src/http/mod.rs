@@ -174,10 +174,52 @@ impl HTTPStatusCodes {
 
     pub fn to_int(code: &Self) -> u32 {
         match code {
+            HTTPStatusCodes::c100 => 100,
+            HTTPStatusCodes::c101 => 101,
+
             HTTPStatusCodes::c200 => 200,
+            HTTPStatusCodes::c201 => 201,
+            HTTPStatusCodes::c202 => 202,
+            HTTPStatusCodes::c203 => 203,
+            HTTPStatusCodes::c204 => 204,
+            HTTPStatusCodes::c205 => 205,
+            HTTPStatusCodes::c206 => 206,
+
+            HTTPStatusCodes::c300 => 300,
+            HTTPStatusCodes::c301 => 301,
+            HTTPStatusCodes::c302 => 302,
+            HTTPStatusCodes::c303 => 303,
+            HTTPStatusCodes::c304 => 304,
+            HTTPStatusCodes::c305 => 305,
+            HTTPStatusCodes::c306 => 306,
+            HTTPStatusCodes::c307 => 307,
+
             HTTPStatusCodes::c400 => 400,
+            HTTPStatusCodes::c401 => 401,
+            HTTPStatusCodes::c402 => 402,
+            HTTPStatusCodes::c403 => 403,
             HTTPStatusCodes::c404 => 404,
-            HTTPStatusCodes::c500 => 500
+            HTTPStatusCodes::c405 => 405,
+            HTTPStatusCodes::c406 => 406,
+            HTTPStatusCodes::c407 => 407,
+            HTTPStatusCodes::c408 => 408,
+            HTTPStatusCodes::c409 => 409,
+            HTTPStatusCodes::c410 => 410,
+            HTTPStatusCodes::c411 => 411,
+            HTTPStatusCodes::c412 => 412,
+            HTTPStatusCodes::c413 => 413,
+            HTTPStatusCodes::c414 => 414,
+            HTTPStatusCodes::c415 => 415,
+            HTTPStatusCodes::c416 => 416,
+            HTTPStatusCodes::c417 => 417,
+            HTTPStatusCodes::c418 => 418,
+
+            HTTPStatusCodes::c500 => 500,
+            HTTPStatusCodes::c501 => 501,
+            HTTPStatusCodes::c502 => 502,
+            HTTPStatusCodes::c503 => 503,
+            HTTPStatusCodes::c504 => 504,
+            HTTPStatusCodes::c505 => 505
         }
     }
 }
