@@ -6,7 +6,7 @@ pub struct HTTP;
 
 impl HTTP {
     pub fn get_generic_response_string(code: HTTPStatusCodes, version: HTTPVersion) -> String {
-        format!("{:?} {:?} {:?}\r\n\r\n", version, HTTPStatusCodes::to_int(&code), HTTPStatusCodes::get_generic_reason(&code))
+        format!("{} {} {}\r\n\r\n", version.to_string(), code.to_int(), code.get_generic_reason())
     }
 }
 
@@ -123,8 +123,8 @@ impl HTTPVersion {
         }
     }
 
-    pub fn to_string(version: Self) -> String {
-        match version {
+    pub fn to_string(&self) -> String {
+        match self {
             HTTPVersion::HTTP10 => String::from("HTTP/1.0"),
             HTTPVersion::HTTP11 => String::from("HTTP/1.1"),
             HTTPVersion::HTTP20 => String::from("HTTP/2.0"),
@@ -143,8 +143,8 @@ pub enum HTTPStatusCodes {
 }
 
 impl HTTPStatusCodes {
-    pub fn get_generic_reason(code: &Self) -> String {
-        match code {
+    pub fn get_generic_reason(&self) -> String {
+        match self {
             HTTPStatusCodes::c100 => String::from("Continue"),
             HTTPStatusCodes::c101 => String::from("Switching Protocols"),
 
@@ -194,8 +194,8 @@ impl HTTPStatusCodes {
         }
     }
 
-    pub fn to_int(code: &Self) -> u32 {
-        match code {
+    pub fn to_int(&self) -> u32 {
+        match self {
             HTTPStatusCodes::c100 => 100,
             HTTPStatusCodes::c101 => 101,
 

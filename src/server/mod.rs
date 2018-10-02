@@ -22,7 +22,8 @@ pub struct Server {
     host: String,
     routes: Vec<Route>,
     server_thread_pool: ThreadPool,
-    worker_thread_pool: ThreadPool
+    worker_thread_pool: ThreadPool,
+    default_http_version: HTTPVersion
 }
 
 impl Server {
@@ -35,7 +36,8 @@ impl Server {
             host: options.get_host(),
             routes: vec![],
             server_thread_pool: ThreadPool::new(options.get_server_threads()),
-            worker_thread_pool: ThreadPool::new(options.get_worker_threads())
+            worker_thread_pool: ThreadPool::new(options.get_worker_threads()),
+            default_http_version: options.get_default_http_version()
         }
     }
 
@@ -50,13 +52,14 @@ impl Server {
         let worker_listener = Arc::new(Mutex::new(listener.try_clone().unwrap()));
         let mut shared_routes = Arc::new(self.routes.to_vec());
         let worker_thread_pool = Arc::new(self.worker_thread_pool);
+        let http_version = self.default_http_version.clone();
 
         // Begin Accepting Connections on all Server Threads
         let server_thread_job = move || {
             loop {
                 match worker_listener.lock().unwrap().accept() {
                     Err(_) => continue,
-                    Ok((stream, _addr)) => handle_connection(stream, &mut shared_routes, Arc::clone(&worker_thread_pool))
+                    Ok((stream, _addr)) => handle_connection(stream, &mut shared_routes, Arc::clone(&worker_thread_pool), http_version)
                 }
             }
         };
@@ -76,12 +79,13 @@ impl Default for Server {
             host: String::from("localhost"),
             routes: vec![],
             server_thread_pool: ThreadPool::new(1),
-            worker_thread_pool: ThreadPool::new(2)
+            worker_thread_pool: ThreadPool::new(2),
+            default_http_version: HTTPVersion::HTTP20
         }
     }
 }
 
-fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: Arc<ThreadPool>) {
+fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: Arc<ThreadPool>, http_version: HTTPVersion) {
     let mut buffer:[u8; 512] = [0; 512];
     stream.read(&mut buffer).unwrap();
     let (_, buffer_split) = buffer.split_at(0);
@@ -90,7 +94,7 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
         0 => {
             // Request has no content
             // TODO: Allow user to override generic response with custom route
-            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, HTTPVersion::HTTP20).as_ref()).unwrap();
+            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, http_version).as_ref()).unwrap();
             stream.flush().unwrap();
             None
         },
@@ -105,12 +109,10 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Request didn't parse correctly
             // Bad Request
             // TODO: Allow user to override generic response with custom route
-            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, HTTPVersion::HTTP20).as_ref()).unwrap();
+            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, http_version).as_ref()).unwrap();
             stream.flush().unwrap();
         },
         Some(some_request) => {
-            let mut route_response = String::from("");
-
             println!("{:?}", some_request.get_method());
             println!("{:?}", some_request.get_path());
             println!("{:?}", some_request.get_version());
@@ -125,7 +127,9 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
                         // Route exists
                         // Call route handler
                         let handler_box = route.get_handler();
-                        pool.execute_handler(handler_box, some_request, Response::from_stream(stream));
+                        let mut response = Response::from_stream(stream);
+                        response.set_version(http_version);
+                        pool.execute_handler(handler_box, some_request, response);
                         return;
                     },
                     false => continue
@@ -135,7 +139,9 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Route was not found
             // Send 404
             // TODO: Allow user to override generic response with custom route
-            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c404, HTTPVersion::HTTP20).as_ref()).unwrap();
+            let not_found_response = HTTP::get_generic_response_string(HTTPStatusCodes::c404, some_request.get_version());
+            println!("404\n{}", not_found_response);
+            stream.write(not_found_response.as_ref()).unwrap();
             stream.flush().unwrap();
         }
     };

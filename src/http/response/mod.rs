@@ -73,7 +73,7 @@ impl Response {
         match self.written {
             false => format!(
                 "{} {} {}\r\n{}\r\n{}",
-                HTTPVersion::to_string(self.version),
+                self.version.to_string(),
                 self.code,
                 self.reason,
                 self.headers.get_headers_formatted(),

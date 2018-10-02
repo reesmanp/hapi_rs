@@ -30,13 +30,15 @@ extern crate hapi_rs;
 use hapi_rs::server::Server;
 use hapi_rs::server::internals::options::ServerOptions;
 use hapi_rs::server::internals::route::Route;
+use hapi_rs::http::HTTPVersion;
 
 fn main() {
     let options = ServerOptions::new(
         String::from("localhost"),
         3000,
         4,
-        4
+        4,
+        HTTPVersion::HTTP11
     );
 
     let mut server = Server::new(&options);
@@ -57,6 +59,7 @@ fn main() {
 
 use hapi_rs::http::{
     HTTPMethod,
+    HTTPVersion,
     request::Request,
     response::Response
 };
@@ -65,7 +68,7 @@ use std::time::SystemTime;
 use std::sync::Arc;
 
 fn main() {
-    let options = ServerOptions::new(String::from("localhost"), 3000, 4, 4);
+    let options = ServerOptions::new(String::from("localhost"), 3000, 4, 4, HTTPVersion::HTTP11);
 
     let mut server = Server::new(&options);
 
@@ -107,6 +110,7 @@ fn my_func(req: &Request, res: &mut Response) -> String {
 ...
 
 use hapi_rs::http::{
+    HTTPVersion,
     HTTPStatusCodes,
     request::Request,
     response::Response
@@ -125,7 +129,7 @@ fn my_func(req: &Request, res: &mut Response) -> String {
             res.set_body(time_str);
             res.flush(false);
             
-            let new_str = String::from("\nGet hapi now!");
+            let new_str = String::from("\nTime to get hapi now!");
             res.set_body(new_str);
             res.flush(true);
             
@@ -134,8 +138,8 @@ fn my_func(req: &Request, res: &mut Response) -> String {
             res.flush(true);
         },
         Err(_) => {
-            res.set_code(HTTPStatusCodes::c500);
-            let reason_str = HTTPStatusCodes::get_generic_reason(HTTPStatusCodes::c500);
+            res.set_code(500);
+            let reason_str = HTTPStatusCodes::c500.get_generic_reason();
             res.set_reason(reason_str);
             res.flush(true);
         }
