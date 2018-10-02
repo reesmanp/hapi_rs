@@ -1,11 +1,29 @@
 # hapi_rs
-A rust implementation of the hapiJS framework.
+A rust implementation of the hapiJs framework.
 
-### Roadmap
+**Pre 1.0.0 | Still in active development | Backwards compatibility is not guaranteed until 1.0.0 release**
+
+## Roadmap
 [Click here to see the progress to 1.0.0!](docs/Roadmap.md)
 
-## Examples
-### Basic Example
+## Why?
+There is always a reason for developing something and `hapi_rs` is no different! I have spent the last few years developing with NodeJS and had a great time with it. However when projects grew, the need for a statically typed language grew too. Some of my colleagues moved towards TypeScript for their development while I found this little gem called Rust.
+
+The server framework I have the most experience in NodeJs is hapiJs. So while I was learning rust I decided to port over hapi to rust just in case anyone followed suit from JavaScript to the Rust side of things.
+
+## Getting Started
+
+### Installing
+This is not hosted anywhere except here, yet. Currently just clone this project in a directory and in the project using this code write this in your `.toml` file:
+```toml
+[dependencies]
+hapi_rs = { path = "../relative/path/to/cloned/project/hapi_rs" }
+```
+
+### Examples
+Any project worth their salt will have good examples of how to use their code. If mine is lacking, please let me know.
+
+#### Basic Example
 ```rust
 extern crate hapi_rs;
 
@@ -33,7 +51,7 @@ fn main() {
 }
 ```
 
-### Custom Route
+#### Custom Route
 ```rust
 ...
 
@@ -84,7 +102,7 @@ fn my_func(req: &Request, res: &mut Response) -> String {
 }
 ```
 
-### Custom Route With Generic Response
+#### Custom Route With Generic Response
 ```rust
 ...
 
@@ -117,3 +135,9 @@ fn my_func(req: &Request, res: &mut Response) -> String {
     String::from("OK")
 }
 ```
+
+## Versioning
+This project uses [semantic](https://semver.org/) versioning.
+
+## Contributing
+If you would like to contribute, just let me know. I do not have a contributing documentation quite yet.
