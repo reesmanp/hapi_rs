@@ -87,7 +87,7 @@ impl Default for Route {
             path: String::from("/"),
             handler: Arc::new(Box::new(|req: &Request, res: &mut Response| {
                 res.set_body(req.get_payload());
-                res.flush();
+                res.flush(true);
                 String::from("Ok")
             }))
         }

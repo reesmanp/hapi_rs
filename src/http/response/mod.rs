@@ -8,7 +8,8 @@ pub struct Response {
     reason: String,
     headers: Header,
     body: String,
-    stream: Option<TcpStream>
+    stream: Option<TcpStream>,
+    written: bool
 }
 
 impl Response {
@@ -19,7 +20,8 @@ impl Response {
             reason,
             headers,
             body,
-            stream: Some(stream)
+            stream: Some(stream),
+            written: false
         }
     }
 
@@ -30,7 +32,8 @@ impl Response {
             reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::c200),
             headers: Header::new(),
             body: String::from(""),
-            stream: Some(stream)
+            stream: Some(stream),
+            written: false
         }
     }
 
@@ -67,14 +70,17 @@ impl Response {
             Some(_) => String::from("")
         };
 
-        format!(
-            "{} {} {}\r\n{}\r\n{}",
-            HTTPVersion::to_string(self.version),
-            self.code,
-            self.reason,
-            self.headers.get_headers_formatted(),
-            body
-        )
+        match self.written {
+            false => format!(
+                "{} {} {}\r\n{}\r\n{}",
+                HTTPVersion::to_string(self.version),
+                self.code,
+                self.reason,
+                self.headers.get_headers_formatted(),
+                body
+            ),
+            true => format!("{}", body)
+        }
     }
 
     /**
@@ -105,14 +111,17 @@ impl Response {
      * Actions
     */
 
-    pub fn flush(&mut self) {
+    pub fn flush(&mut self, flush: bool) {
         // Write and flush the response to the stream
         println!("Response:\n{}", self.get_response());
         let response = self.get_response();
         match self.stream {
             Some(ref mut tcp) => {
                 tcp.write(response.as_ref()).unwrap();
-                tcp.flush().unwrap();
+                if flush {
+                    tcp.flush().unwrap();
+                }
+                self.written = true;
             },
             None => ()
         }
@@ -127,7 +136,8 @@ impl Default for Response {
             reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::c200),
             headers: Header::new(),
             body: String::from(""),
-            stream: None
+            stream: None,
+            written: false
         }
     }
 }

@@ -89,20 +89,20 @@ fn my_func(req: &Request, res: &mut Response) -> String {
             let secs = n.as_secs();
             let time_str = format!("Time is: {}", secs);
             res.set_body(time_str);
-            res.flush();
+            res.flush(true);
         },
         Err(_) => {
             res.set_code(500);
             let reason_str = format!("Time before UNIX EPOCH!");
             res.set_reason(reason_str);
-            res.flush();
+            res.flush(true);
         }
     }
     String::from("OK")
 }
 ```
 
-#### Custom Route With Generic Response
+#### Custom Route With Generic Response And Multiple Write
 ```rust
 ...
 
@@ -123,13 +123,21 @@ fn my_func(req: &Request, res: &mut Response) -> String {
             let secs = n.as_secs();
             let time_str = format!("Time is: {}", secs);
             res.set_body(time_str);
-            res.flush();
+            res.flush(false);
+            
+            let new_str = String::from("\nGet hapi now!");
+            res.set_body(new_str);
+            res.flush(true);
+            
+            let another_new_str = String::from("\nhappy*, oops!");
+            res.set_body(another_new_str);
+            res.flush(true);
         },
         Err(_) => {
             res.set_code(HTTPStatusCodes::c500);
             let reason_str = HTTPStatusCodes::get_generic_reason(HTTPStatusCodes::c500);
             res.set_reason(reason_str);
-            res.flush();
+            res.flush(true);
         }
     }
     String::from("OK")
