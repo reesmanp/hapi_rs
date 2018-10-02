@@ -84,7 +84,7 @@ fn my_func(req: &Request, res: &mut Response) -> String {
 }
 ```
 
-### Custom Route with generic response
+### Custom Route With Generic Response
 ```rust
 ...
 

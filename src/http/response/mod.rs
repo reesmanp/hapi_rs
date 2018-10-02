@@ -59,13 +59,21 @@ impl Response {
     }
 
     fn get_response(&self) -> String {
+        let no_body_codes = [HTTPStatusCodes::c100, HTTPStatusCodes::c101, HTTPStatusCodes::c204, HTTPStatusCodes::c304];
+
+        // HTTP standard dictates that response codes of 1XX, 204, and 304 are not allowed bodies
+        let body = match no_body_codes.iter().find(|ref x| self.code == HTTPStatusCodes::to_int(&x)) {
+            None => self.get_body(),
+            Some(_) => String::from("")
+        };
+
         format!(
             "{} {} {}\r\n{}\r\n{}",
             HTTPVersion::to_string(self.version),
             self.code,
             self.reason,
             self.headers.get_headers_formatted(),
-            self.body
+            body
         )
     }
 

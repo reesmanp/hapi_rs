@@ -72,6 +72,28 @@ impl HTTPMethod {
             _ => HTTPMethod::ERR
         }
     }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            HTTPMethod::GET => String::from("GET"),
+            HTTPMethod::POST => String::from("POST"),
+            HTTPMethod::PUT => String::from("PUT"),
+            HTTPMethod::PATCH => String::from("PATCH"),
+            HTTPMethod::DELETE => String::from("DELETE"),
+            HTTPMethod::COPY => String::from("COPY"),
+            HTTPMethod::HEAD => String::from("HEAD"),
+            HTTPMethod::OPTIONS => String::from("OPTIONS"),
+            HTTPMethod::LINK => String::from("LINK"),
+            HTTPMethod::UNLINK => String::from("UNLINK"),
+            HTTPMethod::PURGE => String::from("PURGE"),
+            HTTPMethod::PURGE => String::from("PURGE"),
+            HTTPMethod::LOCK => String::from("LOCK"),
+            HTTPMethod::UNLOCK => String::from("UNLOCK"),
+            HTTPMethod::PROPFIND => String::from("PROPFIND"),
+            HTTPMethod::VIEW => String::from("VIEW"),
+            HTTPMethod::ERR => String::from("ERR")
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

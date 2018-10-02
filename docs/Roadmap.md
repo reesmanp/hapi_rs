@@ -2,29 +2,37 @@
 - Using semantic versioning
 - Goals to reach each version milestone
 
+### 0.1.0
+- [x] Server accepts and parses requests
+- [x] Server responds correctly
+- [x] Server uses multithreading via a configurable threadpool
+
 ### 0.2.0
-- Implement `HTTP/1.1` standard
+- [x] HTTP Status Codes
+- [X] No Content Codes
+- [x] Let client handle Options requests without server intervention
+- [ ] Implement `HTTP/1.1` standard
 
 ### 0.3.0
-- Implement `HTTP/2` standard
+- [ ] Implement `HTTP/2` standard
 
 ### 0.4.0
-- Implement `hapiJs` API
+- [ ] Implement `hapiJs` API
 
 ### 0.5.0
-- Implement `HTTPS` probably using tls-api
+- [ ] Implement `HTTPS` probably using tls-api
 
 ### 0.6.0
-- Write decent tests
+- [ ] Write decent tests
 
 ### 0.7.0
-- Probably performance refactor
+- [ ] Probably performance refactor
 
 ### 0.8.0
-- TBD
+- [ ] TBD
 
 ### 0.9.0
-- TBD
+- [ ] TBD
 
 ### 1.0.0
-- All subtasks complete and tests pass
+- [ ] All subtasks complete and tests pass
