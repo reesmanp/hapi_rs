@@ -66,7 +66,7 @@ impl Request {
         // Combine headers
         loop {
             match split_buffer.next() {
-                None => return None,
+                None => break,
                 Some(line) => match line {
                     "" => break,
                     _ => header_vec.push(line)
@@ -82,6 +82,15 @@ impl Request {
 
         let (method, path, version) = request_line_opt.unwrap();
         let headers = headers_opt.unwrap();
+
+        // Connection Upgrade
+        match headers.get_header(String::from("Connection")) {
+            None => (),
+            Some(connection_header) => match connection_header.eq(&String::from("Upgrade")) {
+                true => (), // TODO: implement upgrade
+                false => ()
+            }
+        }
 
         // Grab Payload
         loop {

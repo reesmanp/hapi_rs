@@ -88,18 +88,17 @@ impl Default for Server {
 fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: Arc<ThreadPool>, http_version: HTTPVersion) {
     let mut buffer:[u8; 512] = [0; 512];
     stream.read(&mut buffer).unwrap();
-    let (_, buffer_split) = buffer.split_at(0);
 
-    let request = match buffer_split.len() {
-        0 => {
+    let request = match buffer.len() != 0 {
+        false => {
             // Request has no content
             // TODO: Allow user to override generic response with custom route
             stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, http_version).as_ref()).unwrap();
             stream.flush().unwrap();
             None
         },
-        _ => {
-            Request::parse_request(buffer_split)
+        true => {
+            Request::parse_request(&buffer)
         }
     };
 
