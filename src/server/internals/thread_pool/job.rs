@@ -1,4 +1,4 @@
-use super::{Request, Response};
+
 
 pub trait FnBox {
     fn call_box(self: Box<Self>);

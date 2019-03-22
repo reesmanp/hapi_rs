@@ -46,10 +46,7 @@ fn main() {
     // Add routes here
     server.route(Route::default());
 
-    match server.start() {
-        Ok(t) => println!("OK: {}", t),
-        Err(e) => println!("Error: {}", e)
-    }
+    server.start();
 }
 ```
 
@@ -80,10 +77,7 @@ fn main() {
         Arc::new(Box::new(|req: &Request, res: &mut Response| my_func(req, res)))
     ));
 
-    match server.start() {
-        Ok(t) => println!("OK: {}", t),
-        Err(e) => println!("Error: {}", e)
-    }
+    server.start();
 }
 
 fn my_func(req: &Request, res: &mut Response) -> String {

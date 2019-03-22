@@ -28,8 +28,8 @@ impl Response {
     pub fn from_stream(stream: TcpStream) -> Self {
         Self {
             version: HTTPVersion::HTTP20,
-            code: HTTPStatusCodes::to_int(&HTTPStatusCodes::c200),
-            reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::c200),
+            code: HTTPStatusCodes::to_int(&HTTPStatusCodes::Ok200),
+            reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::Ok200),
             headers: Header::new(),
             body: String::from(""),
             stream: Some(stream),
@@ -62,7 +62,7 @@ impl Response {
     }
 
     fn get_response(&self) -> String {
-        let no_body_codes = [HTTPStatusCodes::c100, HTTPStatusCodes::c101, HTTPStatusCodes::c204, HTTPStatusCodes::c304];
+        let no_body_codes = [HTTPStatusCodes::Continue100, HTTPStatusCodes::SwitchingProtocols101, HTTPStatusCodes::NoContent204, HTTPStatusCodes::NotModified304];
 
         // HTTP standard dictates that response codes of 1XX, 204, and 304 are not allowed bodies
         let body = match no_body_codes.iter().find(|ref x| self.code == HTTPStatusCodes::to_int(&x)) {
@@ -132,8 +132,8 @@ impl Default for Response {
     fn default() -> Self {
         Self {
             version: HTTPVersion::HTTP20,
-            code: HTTPStatusCodes::to_int(&HTTPStatusCodes::c200),
-            reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::c200),
+            code: HTTPStatusCodes::to_int(&HTTPStatusCodes::Ok200),
+            reason: HTTPStatusCodes::get_generic_reason(&HTTPStatusCodes::Ok200),
             headers: Header::new(),
             body: String::from(""),
             stream: None,

@@ -54,7 +54,7 @@ impl Request {
         // Safe check for stringifying request
         let str_buffer = match String::from_utf8(buffer.to_vec()) {
             Err(_) => return None,
-            Ok(T) => T
+            Ok(t) => t
         };
 
         let mut split_buffer = str_buffer.split("\r\n");
@@ -96,7 +96,7 @@ impl Request {
         loop {
             match split_buffer.next() {
                 None => break,
-                Some(T) => payload_vec.push(T)
+                Some(t) => payload_vec.push(t)
             }
         }
         let payload = payload_vec.join("\r\n");
@@ -118,21 +118,21 @@ impl Request {
         // Safe check for HTTP method
         let mut next_iter = match split_buffer.next() {
             None => "",
-            Some(T) => T
+            Some(t) => t
         };
         let method = HTTPMethod::from_str(next_iter);
 
         // Safe check for request-uri
         next_iter = match split_buffer.next() {
             None => "/",
-            Some(T) => T
+            Some(t) => t
         };
         let path = String::from(next_iter);
 
         // Safe check for HTTP version
         next_iter = match split_buffer.next() {
             None => "",
-            Some(T) => T
+            Some(t) => t
         };
         let version = HTTPVersion::from_str(next_iter);
 

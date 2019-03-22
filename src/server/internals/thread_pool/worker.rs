@@ -14,7 +14,7 @@ impl Worker {
             thread: Some(thread::spawn(move || {
                 loop {
                     let unlocked = match receiver.lock() {
-                        Ok(T) => T,
+                        Ok(t) => t,
                         Err(_) => break
                     };
 
@@ -59,7 +59,7 @@ impl Drop for Worker {
     fn drop(&mut self) {
         println!("Dropping worker {}", self.id);
         if let Some(thread) = self.thread.take() {
-            thread.join();
+            thread.join().unwrap_or_default();
         }
     }
 }

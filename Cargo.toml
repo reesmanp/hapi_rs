@@ -1,7 +1,8 @@
 [package]
 name = "hapi_rs"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Paul Reesman <paul.reesman@nordstrom.com>"]
+edition = "2018"
 
 [dependencies]
 serde = "1.0.77"

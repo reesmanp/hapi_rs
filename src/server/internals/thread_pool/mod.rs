@@ -4,7 +4,7 @@ mod worker;
 
 use std::vec::Vec;
 use std::sync::{Arc, mpsc, Mutex};
-use self::job::{Job, FnBox};
+use self::job::{FnBox};
 use self::worker::Worker;
 use self::message::Message;
 use super::route::RouteHandler;
@@ -38,7 +38,7 @@ impl ThreadPool {
     }
 
     pub fn execute_handler(&self, handler: Arc<RouteHandler>, req: Request, res: Response) {
-        self.sender.send(Message::HandlerJob(handler, req, res));
+        self.sender.send(Message::HandlerJob(handler, req, res)).unwrap();
     }
 
     pub fn execute_job<F>(&self, f: F)
@@ -48,7 +48,7 @@ impl ThreadPool {
         for _worker in &self.workers
             {
             let cloned_job = job.clone();
-            self.sender.send(Message::NewContinuousJob(cloned_job));
+            self.sender.send(Message::NewContinuousJob(cloned_job)).unwrap();
         }
     }
 }
@@ -58,7 +58,7 @@ impl Drop for ThreadPool {
         println!("Sending terminate message to all workers!");
 
         for _ in &mut self.workers {
-            self.sender.send(Message::Terminate);
+            self.sender.send(Message::Terminate).unwrap();
         }
 
         println!("Shutting down all workers!");

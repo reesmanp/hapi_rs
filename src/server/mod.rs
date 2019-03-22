@@ -3,8 +3,7 @@ pub mod internals;
 use self::internals::{
     options::ServerOptions,
     route::Route,
-    thread_pool::ThreadPool,
-    thread_pool::job::FnBox
+    thread_pool::ThreadPool
 };
 use super::http::HTTPStatusCodes;
 use super::http::HTTPVersion;
@@ -15,7 +14,7 @@ use std::vec::Vec;
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::io::*;
-use std::marker::Sync;
+
 
 pub struct Server {
     port: u32,
@@ -46,7 +45,7 @@ impl Server {
         self.routes.push(new_route);
     }
 
-    pub fn start(self) -> Result<String> {
+    pub fn start(self) -> ! {
         let host_url = format!("{}:{}", self.host, self.port);
         let listener = TcpListener::bind(host_url).unwrap();
         let worker_listener = Arc::new(Mutex::new(listener.try_clone().unwrap()));
@@ -68,7 +67,7 @@ impl Server {
 
         loop {}
 
-        Ok(String::from("OK"))
+        //Ok(String::from("OK"))
     }
 }
 
@@ -93,7 +92,7 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
         false => {
             // Request has no content
             // TODO: Allow user to override generic response with custom route
-            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, http_version).as_ref()).unwrap();
+            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::BadRequest400, http_version).as_ref()).unwrap();
             stream.flush().unwrap();
             None
         },
@@ -108,7 +107,7 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Request didn't parse correctly
             // Bad Request
             // TODO: Allow user to override generic response with custom route
-            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::c400, http_version).as_ref()).unwrap();
+            stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::BadRequest400, http_version).as_ref()).unwrap();
             stream.flush().unwrap();
         },
         Some(some_request) => {
@@ -138,7 +137,7 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Route was not found
             // Send 404
             // TODO: Allow user to override generic response with custom route
-            let not_found_response = HTTP::get_generic_response_string(HTTPStatusCodes::c404, some_request.get_version());
+            let not_found_response = HTTP::get_generic_response_string(HTTPStatusCodes::NotFound404, some_request.get_version());
             println!("404\n{}", not_found_response);
             stream.write(not_found_response.as_ref()).unwrap();
             stream.flush().unwrap();
