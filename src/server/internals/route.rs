@@ -6,8 +6,9 @@ use super::super::super::http::{
     request::Request,
     response::Response
 };
+use std::fmt::Error;
 
-pub type RouteHandler = Box<Fn(&Request, &mut Response) -> String + Send + Sync + 'static>;
+pub type RouteHandler = Box<Fn(&Request, &mut Response) -> Result<(), Error> + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub struct Route {
@@ -87,8 +88,8 @@ impl Default for Route {
             path: String::from("/"),
             handler: Arc::new(Box::new(|req: &Request, res: &mut Response| {
                 res.set_body(req.get_payload());
-                res.flush(true);
-                String::from("Ok")
+                res.write(true);
+                Ok(())
             }))
         }
     }

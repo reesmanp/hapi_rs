@@ -1,6 +1,10 @@
-pub mod header;
-pub mod request;
-pub mod response;
+pub(crate) mod header;
+pub(crate) mod request;
+pub(crate) mod response;
+
+pub use self::header::Header;
+pub use self::request::Request;
+pub use self::response::Response;
 
 pub struct HTTP;
 

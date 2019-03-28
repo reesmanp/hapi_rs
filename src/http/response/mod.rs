@@ -99,6 +99,11 @@ impl Response {
         self.reason = reason;
     }
 
+    pub fn set_default_code_and_reason(&mut self, code: HTTPStatusCodes) {
+        self.code = code.to_int();
+        self.reason = code.get_generic_reason();
+    }
+
     pub fn set_header(&mut self, key: String, value: String) {
         self.headers.insert(key, value);
     }
@@ -111,16 +116,19 @@ impl Response {
      * Actions
     */
 
-    pub fn flush(&mut self, flush: bool) {
+    pub fn write(&mut self, flush: bool) {
         // Write and flush the response to the stream
         println!("Response:\n{}", self.get_response());
         let response = self.get_response();
         match self.stream {
             Some(ref mut tcp) => {
-                tcp.write(response.as_ref()).unwrap();
                 if flush {
-                    tcp.flush().unwrap();
+                    tcp.set_nodelay(true);
+                } else {
+                    tcp.set_nodelay(false);
                 }
+
+                tcp.write(response.as_ref()).unwrap();
                 self.written = true;
             },
             None => ()

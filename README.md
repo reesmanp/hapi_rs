@@ -52,13 +52,13 @@ fn main() {
 
 #### Custom Route
 ```rust
-...
+// ...
 
 use hapi_rs::http::{
     HTTPMethod,
     HTTPVersion,
-    request::Request,
-    response::Response
+    Request,
+    Response
 };
 
 use std::time::SystemTime;
@@ -80,65 +80,63 @@ fn main() {
     server.start();
 }
 
-fn my_func(req: &Request, res: &mut Response) -> String {
+fn my_func(req: &Request, res: &mut Response) -> Result<(), Error> {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
         Ok(n) => {
             let secs = n.as_secs();
             let time_str = format!("Time is: {}", secs);
             res.set_body(time_str);
-            res.flush(true);
+            res.write(false);
         },
         Err(_) => {
             res.set_code(500);
             let reason_str = format!("Time before UNIX EPOCH!");
             res.set_reason(reason_str);
-            res.flush(true);
+            res.write(false);
         }
     }
-    String::from("OK")
+    Ok(())
 }
 ```
 
 #### Custom Route With Generic Response And Multiple Write
 ```rust
-...
+// ...
 
 use hapi_rs::http::{
     HTTPVersion,
     HTTPStatusCodes,
-    request::Request,
-    response::Response
+    Request,
+    Response
 };
 
 use std::time::SystemTime;
 use std::sync::Arc;
 
-...
+// ...
 
-fn my_func(req: &Request, res: &mut Response) -> String {
+fn my_func(req: &Request, res: &mut Response) -> Result<(), Error> {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
         Ok(n) => {
             let secs = n.as_secs();
             let time_str = format!("Time is: {}", secs);
             res.set_body(time_str);
-            res.flush(false);
+            res.write(false);
             
             let new_str = String::from("\nTime to get hapi now!");
             res.set_body(new_str);
-            res.flush(true);
+            res.write(true);
             
             let another_new_str = String::from("\nhappy*, oops!");
             res.set_body(another_new_str);
-            res.flush(true);
+            res.write(true);
         },
         Err(_) => {
-            res.set_code(500);
-            let reason_str = HTTPStatusCodes::c500.get_generic_reason();
-            res.set_reason(reason_str);
-            res.flush(true);
+            res.set_default_code_and_reason(HTTPStatusCodes::c500);
+            res.write(true);
         }
     }
-    String::from("OK")
+    Ok(())
 }
 ```
 

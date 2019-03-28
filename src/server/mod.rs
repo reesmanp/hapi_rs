@@ -1,10 +1,9 @@
-pub mod internals;
+pub(crate) mod internals;
 
-use self::internals::{
-    options::ServerOptions,
-    route::Route,
-    thread_pool::ThreadPool
-};
+pub use self::internals::options::ServerOptions;
+pub use self::internals::route::{Route, RouteHandler};
+
+use self::internals::thread_pool::ThreadPool;
 use super::http::HTTPStatusCodes;
 use super::http::HTTPVersion;
 use super::http::request::Request;
@@ -140,7 +139,6 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             let not_found_response = HTTP::get_generic_response_string(HTTPStatusCodes::NotFound404, some_request.get_version());
             println!("404\n{}", not_found_response);
             stream.write(not_found_response.as_ref()).unwrap();
-            stream.flush().unwrap();
         }
     };
 }
