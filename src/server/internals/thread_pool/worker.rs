@@ -41,7 +41,7 @@ impl Worker {
                             handler(&req, &mut res);
                         }
                         Message::Terminate => {
-                            println!("Worker {} was told to terminate", id);
+                            println!("Worker {} is shutting down", id);
                             break;
                         }
                     }

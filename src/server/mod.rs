@@ -92,7 +92,6 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Request has no content
             // TODO: Allow user to override generic response with custom route
             stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::BadRequest400, http_version).as_ref()).unwrap();
-            stream.flush().unwrap();
             None
         },
         true => {
@@ -107,7 +106,6 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Bad Request
             // TODO: Allow user to override generic response with custom route
             stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::BadRequest400, http_version).as_ref()).unwrap();
-            stream.flush().unwrap();
         },
         Some(some_request) => {
             println!("{:?}", some_request.get_method());
