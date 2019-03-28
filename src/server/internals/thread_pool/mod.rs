@@ -38,7 +38,10 @@ impl ThreadPool {
     }
 
     pub fn execute_handler(&self, handler: Arc<RouteHandler>, req: Request, res: Response) {
-        self.sender.send(Message::HandlerJob(handler, req, res)).unwrap();
+        match self.sender.send(Message::HandlerJob(handler, req, res)) {
+            Ok(_) => return,
+            Err(t) => self.log_error(t)
+        }
     }
 
     pub fn execute_job<F>(&self, f: F)
@@ -48,14 +51,22 @@ impl ThreadPool {
         for _worker in &self.workers
             {
             let cloned_job = job.clone();
-            self.sender.send(Message::NewContinuousJob(cloned_job)).unwrap();
+            match self.sender.send(Message::NewContinuousJob(cloned_job)) {
+                Ok(_) => return,
+                Err(t) => self.log_error(t)
+            }
         }
+    }
+
+    fn log_error(&self, err: mpsc::SendError<Message>) {
+        eprintln!("{}", err);
     }
 }
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         println!("Sending terminate message to all workers!");
+        println!("{}", self.workers.len());
 
         for _ in &mut self.workers {
             self.sender.send(Message::Terminate).unwrap();

@@ -6,9 +6,8 @@ use super::super::super::http::{
     request::Request,
     response::Response
 };
-use std::fmt::Error;
 
-pub type RouteHandler = Box<Fn(&Request, &mut Response) -> Result<(), Error> + Send + Sync + 'static>;
+pub type RouteHandler = Box<Fn(&Request, &mut Response) -> Result<(), String> + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub struct Route {
@@ -40,7 +39,7 @@ impl Route {
         Arc::clone(&self.handler)
     }
 
-    pub fn is_route_match(&mut self, method: HTTPMethod, path: String) -> bool { // TODO: Change from bool to Result to allow for a 405 to be sent if path matches but is not a correct method
+    pub fn is_route_match(&self, method: HTTPMethod, path: String) -> bool { // TODO: Change from bool to Result to allow for a 405 to be sent if path matches but is not a correct method
         match self.is_path_match(path) {
             true => {
                 match self.method.iter().find(|&&verb| verb == method) {

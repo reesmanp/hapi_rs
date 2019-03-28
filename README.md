@@ -80,7 +80,7 @@ fn main() {
     server.start();
 }
 
-fn my_func(req: &Request, res: &mut Response) -> Result<(), Error> {
+fn my_func(req: &Request, res: &mut Response) -> Result<(), String> {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
         Ok(n) => {
             let secs = n.as_secs();
@@ -115,7 +115,7 @@ use std::sync::Arc;
 
 // ...
 
-fn my_func(req: &Request, res: &mut Response) -> Result<(), Error> {
+fn my_func(req: &Request, res: &mut Response) -> Result<(), String> {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
         Ok(n) => {
             let secs = n.as_secs();

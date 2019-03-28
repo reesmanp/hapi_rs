@@ -9,6 +9,7 @@ pub struct Worker {
 
 impl Worker {
     pub fn new(id: u8, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Self {
+        println!("A new worker: {}", id);
         Self {
             id,
             thread: Some(thread::spawn(move || {
@@ -38,7 +39,10 @@ impl Worker {
                         },
                         Message::HandlerJob(handler, req, mut res) => {
                             println!("Worker {} got a new handler job!", id);
-                            handler(&req, &mut res);
+                            match handler(&req, &mut res) {
+                                Ok(_) => continue,
+                                Err(e) => Self::log_error(e)
+                            }
                         }
                         Message::Terminate => {
                             println!("Worker {} is shutting down", id);
@@ -53,6 +57,10 @@ impl Worker {
     pub fn get_id(&self) -> u8 {
         self.id
     }
+
+    fn log_error(err: String) {
+        eprintln!("{}", err);
+    }
 }
 
 impl Drop for Worker {
@@ -61,6 +69,7 @@ impl Drop for Worker {
         if let Some(thread) = self.thread.take() {
             thread.join().unwrap_or_default();
         }
+        self.thread = None;
     }
 }
 

@@ -65,8 +65,6 @@ impl Server {
         self.server_thread_pool.execute_job(server_thread_job);
 
         loop {}
-
-        //Ok(String::from("OK"))
     }
 }
 
@@ -108,11 +106,13 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             stream.write(HTTP::get_generic_response_string(HTTPStatusCodes::BadRequest400, http_version).as_ref()).unwrap();
         },
         Some(some_request) => {
-            println!("{:?}", some_request.get_method());
-            println!("{:?}", some_request.get_path());
-            println!("{:?}", some_request.get_version());
-            println!("{}", some_request.get_headers().get_headers_formatted());
-            println!("{}", some_request.get_payload());
+            if cfg!(debug_assertions) {
+                println!("{:?}", some_request.get_method());
+                println!("{:?}", some_request.get_path());
+                println!("{:?}", some_request.get_version());
+                println!("{}", some_request.get_headers().get_headers_formatted());
+                println!("{}", some_request.get_payload());
+            }
 
             // Valid request
             // Searching for matching route in order it was added
@@ -135,7 +135,11 @@ fn handle_connection(mut stream: TcpStream, routes: &mut Arc<Vec<Route>>, pool: 
             // Send 404
             // TODO: Allow user to override generic response with custom route
             let not_found_response = HTTP::get_generic_response_string(HTTPStatusCodes::NotFound404, some_request.get_version());
-            println!("404\n{}", not_found_response);
+
+            if cfg!(debug_assertions) {
+                println!("404\n{}", not_found_response);
+            }
+
             stream.write(not_found_response.as_ref()).unwrap();
         }
     };

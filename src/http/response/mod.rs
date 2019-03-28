@@ -1,5 +1,5 @@
 use super::{HTTPVersion, header::Header, HTTPStatusCodes};
-use std::net::TcpStream;
+use std::net::{TcpStream, Shutdown};
 use std::io::Write;
 
 pub struct Response {
@@ -9,7 +9,8 @@ pub struct Response {
     headers: Header,
     body: String,
     stream: Option<TcpStream>,
-    written: bool
+    written: bool,
+    dirty: bool
 }
 
 impl Response {
@@ -21,7 +22,8 @@ impl Response {
             headers,
             body,
             stream: Some(stream),
-            written: false
+            written: false,
+            dirty: false
         }
     }
 
@@ -33,7 +35,8 @@ impl Response {
             headers: Header::new(),
             body: String::from(""),
             stream: Some(stream),
-            written: false
+            written: false,
+            dirty: false
         }
     }
 
@@ -110,22 +113,26 @@ impl Response {
 
     pub fn set_body(&mut self, body: String) {
         self.body = body;
+        self.dirty = true;
     }
 
     /**
      * Actions
     */
 
+    /// Write and flush the response to the stream
     pub fn write(&mut self, flush: bool) {
-        // Write and flush the response to the stream
-        println!("Response:\n{}", self.get_response());
+        if cfg!(debug_assertions) {
+            println!("Response:\n{}", self.get_response());
+        }
+
         let response = self.get_response();
         match self.stream {
             Some(ref mut tcp) => {
                 if flush {
-                    tcp.set_nodelay(true);
+                    tcp.set_nodelay(true).unwrap();
                 } else {
-                    tcp.set_nodelay(false);
+                    tcp.set_nodelay(false).unwrap();
                 }
 
                 tcp.write(response.as_ref()).unwrap();
@@ -133,6 +140,8 @@ impl Response {
             },
             None => ()
         }
+
+        self.dirty = false;
     }
 }
 
@@ -145,7 +154,24 @@ impl Default for Response {
             headers: Header::new(),
             body: String::from(""),
             stream: None,
-            written: false
+            written: false,
+            dirty: false
+        }
+    }
+}
+
+impl Drop for Response {
+    fn drop(&mut self) {
+        if self.dirty {
+            self.write(true);
+        }
+
+        match self.stream {
+            None => return,
+            Some(ref mut tcp) => {
+                tcp.shutdown(Shutdown::Both).unwrap();
+                return;
+            }
         }
     }
 }
